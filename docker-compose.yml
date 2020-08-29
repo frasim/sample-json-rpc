@@ -1,0 +1,62 @@
+version: "3.8"
+services:
+
+  #PHP Service
+  app:
+    build:
+      args:
+        user: www
+        uid: 1000
+      context: ./
+      dockerfile: Dockerfile
+    image: app
+    container_name: application
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www
+      - ./.docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - app-network
+
+  #Nginx Service
+  webserver:
+    image: nginx:alpine
+    container_name: application-webserver
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 8000:80
+      - 4443:443
+    volumes:
+      - ./:/var/www
+      - ./.docker/nginx/:/etc/nginx/conf.d
+    networks:
+      - app-network
+
+  #PostgreSQL Service
+  db:
+    image: kartoza/postgis:11.5-2.8
+    container_name: application-db
+    restart: unless-stopped
+    ports:
+      - 55432:5432
+    environment:
+      - POSTGRES_DB=${DB_DATABASE}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - ./.docker/postgresql/data/:/var/lib/postgresql/data
+      - ./.docker/postgresql/init/:/docker-entrypoint-initdb.d/
+    networks:
+      - app-network
+
+#Network
+networks:
+  app-network:
+    driver: bridge
+
+#Volumes
+volumes:
+  dbdata:
+    driver: local

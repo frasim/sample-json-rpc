@@ -1,0 +1,135 @@
+PHPUnit 8.5.8
+
+================================================================================
+REQUEST (Test error "Parse error")
+
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"jsonrpc":"2.0","id":"1"' \
+  http://localhost:8000/
+
+--------------------------------------------------------------------------------
+RESPONSE
+
+{"id":null,"jsonrpc":null,"error":{"code":-32700,"message":"Parse error","data":[]}}
+
+================================================================================
+REQUEST (Test error "Invalid request")
+
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"id":"1","method":"SearchNearestPharmacy","params":{"currentLocation":{"latitude":"1","longitude":"1"},"range":"1000","limit":"2"}}' \
+  http://localhost:8000/
+
+--------------------------------------------------------------------------------
+RESPONSE
+
+{"id":"1","jsonrpc":null,"error":{"code":-32600,"message":"Invalid Request","data":["The jsonrpc field is required."]}}
+
+================================================================================
+REQUEST (Test error "Method not found")
+
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"jsonrpc":"2.0","id":"1","method":"Search","params":{"currentLocation":{"latitude":"1","longitude":"1"},"range":"1000","limit":"2"}}' \
+  http://localhost:8000/
+  
+--------------------------------------------------------------------------------
+RESPONSE
+  
+{"id":"1","jsonrpc":"2.0","error":{"code":-32601,"message":"Method not found","data":["The selected method is invalid."]}}
+
+================================================================================
+REQUEST (Test error "Invalid params")
+
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"jsonrpc":"2.0","id":"1","method":"SearchNearestPharmacy","params":{"currentLocation":{"latitude":"1","longitude":"1"}}}' \
+  http://localhost:8000/
+
+--------------------------------------------------------------------------------
+RESPONSE
+
+{"id":"1","jsonrpc":"2.0","error":{"code":-32602,"message":"Invalid params","data":["The range field is required.","The limit field is required."]}}
+
+================================================================================
+REQUEST (Test error "Invalid params - Negative range")
+
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"jsonrpc":"2.0","id":"1","method":"SearchNearestPharmacy","params":{"currentLocation":{"latitude":"1","longitude":"1"},"range":"-500","limit":"10"}}' \
+  http://localhost:8000/
+
+--------------------------------------------------------------------------------
+RESPONSE
+
+{"id":"1","jsonrpc":"2.0","error":{"code":-32602,"message":"Invalid params","data":["The range must be at least 0."]}}
+================================================================================
+REQUEST (Test error "Invalid params - Negative limit")
+
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"jsonrpc":"2.0","id":"1","method":"SearchNearestPharmacy","params":{"currentLocation":{"latitude":"1","longitude":"1"},"range":"500","limit":"-2"}}' \
+  http://localhost:8000/
+
+--------------------------------------------------------------------------------
+RESPONSE
+
+{"id":"1","jsonrpc":"2.0","error":{"code":-32602,"message":"Invalid params","data":["The limit must be at least -1."]}}
+================================================================================
+================================================================================
+REQUEST (Example 1)
+
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"jsonrpc":"2.0","id":"1","method":"SearchNearestPharmacy","params":{"currentLocation":{"latitude":"41.10938993","longitude":"15.0321010"},"range":"5000","limit":"2"}}' \
+  http://localhost:8000/
+  
+--------------------------------------------------------------------------------
+RESPONSE
+
+{"id":"1","jsonrpc":"2.0","result":{"pharmacies":[{"name":"Belmonte Di Dott.sse Belmonte S. Ed E. Snc","latitude":"41.11","longitude":"15.03","distance":"39.99961698"}]}}
+================================================================================
+REQUEST (Example 2)
+
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"jsonrpc":"2.0","id":"1","method":"SearchNearestPharmacy","params":{"currentLocation":{"latitude":"40.854953","longitude":"14.251711"},"range":"500","limit":"10"}}' \
+  http://localhost:8000/
+
+--------------------------------------------------------------------------------
+
+{"id":"1","jsonrpc":"2.0","result":{"pharmacies":[{"name":"CAVOUR SAS DI DONNA FRANCESCO & C.","latitude":"40.85","longitude":"14.25","distance":"242.02487815"},{"name":"DEL SOLE DI LETIZIA LIMONE E PASQUALE RUSSO SNC","latitude":"40.85","longitude":"14.25","distance":"242.02487815"},{"name":"RUSSO MAURIZIO","latitude":"40.85","longitude":"14.25","distance":"242.02487815"},{"name":"MARASCO TIZIANA","latitude":"40.85","longitude":"14.25","distance":"445.67781879"},{"name":"FARMACIE FERLAINO S.N.C. DEI DOTTORI GIOVANNI E CHRISTIAN FERLAINO","latitude":"40.86","longitude":"14.26","distance":"444.80036815"},{"name":"FERLAINO GIOVANNI","latitude":"40.86","longitude":"14.26","distance":"444.80036815"},{"name":"MAGGIORE TOMMASO","latitude":"40.85","longitude":"14.25","distance":"495.77418459"},{"name":"NAZIONALE DI DE SIO CESARI GIOVANNI E C. SNC","latitude":"40.85","longitude":"14.25","distance":"495.77418459"},{"name":"AMODIO SIMONA","latitude":"40.85","longitude":"14.25","distance":"495.77418459"},{"name":"SALES DEL DOTT. SOLLO VINCENZO","latitude":"40.85","longitude":"14.25","distance":"495.77418459"}]}}
+
+================================================================================
+REQUEST (Example 3)
+
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"jsonrpc":"2.0","id":"1","method":"SearchNearestPharmacy","params":{"currentLocation":{"latitude":"40.854953","longitude":"14.251711"},"range":"0","limit":"10"}}' \
+  http://localhost:8000/
+
+--------------------------------------------------------------------------------
+
+{"id":"1","jsonrpc":"2.0","result":{"pharmacies":[]}}
+
+================================================================================
+
+
+
+
+
+$ docker-compose exec app ./vendor/bin/phpunit
+PHPUnit 8.5.8 by Sebastian Bergmann and contributors.
+
+..........                                                        10 / 10 (100%)
+
+Time: 259 ms, Memory: 10.00 MB
+
+OK (10 tests, 28 assertions)
+
+
+
+
+
+
