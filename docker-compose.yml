@@ -10,7 +10,7 @@ services:
       context: ./
       dockerfile: Dockerfile
     image: app
-    container_name: application
+    container_name: ${APP_NAME}
     restart: unless-stopped
     working_dir: /var/www/
     volumes:
@@ -22,12 +22,12 @@ services:
   #Nginx Service
   webserver:
     image: nginx:alpine
-    container_name: application-webserver
+    container_name: ${APP_NAME}-webserver
     restart: unless-stopped
     tty: true
     ports:
-      - 8000:80
-      - 4443:443
+      - ${APP_BIND_PORT_HTTP}:80
+      - ${APP_BIND_PORT_HTTPS}:443
     volumes:
       - ./:/var/www
       - ./.docker/nginx/:/etc/nginx/conf.d
@@ -37,10 +37,10 @@ services:
   #PostgreSQL Service
   db:
     image: kartoza/postgis:11.5-2.8
-    container_name: application-db
+    container_name: ${APP_NAME}-db
     restart: unless-stopped
     ports:
-      - 55432:5432
+      - ${APP_BIND_PORT_DB}:5432
     environment:
       - POSTGRES_DB=${DB_DATABASE}
       - POSTGRES_USER=${DB_USERNAME}

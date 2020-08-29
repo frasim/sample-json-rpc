@@ -33,10 +33,10 @@ curl --header "Content-Type: application/json" \
   --request POST \
   --data '{"jsonrpc":"2.0","id":"1","method":"Search","params":{"currentLocation":{"latitude":"1","longitude":"1"},"range":"1000","limit":"2"}}' \
   http://localhost:8000/
-  
+
 --------------------------------------------------------------------------------
 RESPONSE
-  
+
 {"id":"1","jsonrpc":"2.0","error":{"code":-32601,"message":"Method not found","data":["The selected method is invalid."]}}
 
 ================================================================================
@@ -84,7 +84,7 @@ curl --header "Content-Type: application/json" \
   --request POST \
   --data '{"jsonrpc":"2.0","id":"1","method":"SearchNearestPharmacy","params":{"currentLocation":{"latitude":"41.10938993","longitude":"15.0321010"},"range":"5000","limit":"2"}}' \
   http://localhost:8000/
-  
+
 --------------------------------------------------------------------------------
 RESPONSE
 
@@ -127,9 +127,3 @@ PHPUnit 8.5.8 by Sebastian Bergmann and contributors.
 Time: 259 ms, Memory: 10.00 MB
 
 OK (10 tests, 28 assertions)
-
-
-
-
-
-

@@ -19,10 +19,10 @@ During installation, the data of the pharmacies are imported from an external js
 
 
 # Table of Contents
-1. [Requirements](#requirements)
-2. [Installation](#installation)
-3. [Usage](#usage)
-4. [Tests](#tests)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Test](#test)
 
 ## Requirements
 
@@ -44,18 +44,36 @@ Setting up a local environment requires the installation of:
 - Composer
 
 ## Installation
-
-### A) Docker
-Located in the working directory
+In both cases (option A or B) located in the working directory
 
     $ cd <working directory>
-
-#### 1. Checkout the repository
     
-    $ git clone git@github.com:frasim/sample-json-rpc.git
-    ----------------------------------------------------------------------    
+#### Checkout the repository (or just copy)
+    
+    $ git clone git@github.com:frasim/sample-json-rpc.git jsonrpc
+    ----------------------------------------------------------------------
+    Clone in 'jsonrpc' in corso...
+    remote: Enumerating objects: 79, done.
+    remote: Counting objects: 100% (79/79), done.
+    remote: Compressing objects: 100% (59/59), done.
+    remote: Total 79 (delta 4), reused 79 (delta 4), pack-reused 0
+    Ricezione degli oggetti: 100% (79/79), 76.98 KiB | 895.00 KiB/s, fatto.
+    Risoluzione dei delta: 100% (4/4), fatto.
+    
+Move into project directory
 
-#### 2. Build image
+    $ cd jsonrpc
+    
+#### Create a configuration file .env
+
+    $ cp .env.example .env
+    
+you can change DB_DATABASE, DB_USERNAME and DB_PASSWORD or any other configuration key.
+
+---
+### A) Docker
+    
+#### 1. Build image
 
     $ docker-compose build app
     ----------------------------------------------------------------------
@@ -96,7 +114,7 @@ Located in the working directory
     Successfully built 5435a8087947
     Successfully tagged app:latest
 
-#### 3. Run services
+#### 2. Run services
 
     $ docker-compose up -d
     ----------------------------------------------------------------------
@@ -105,7 +123,7 @@ Located in the working directory
     Creating application           ... done
     Creating application-db        ... done
 
-#### 4. Check services
+#### 3. Check services
     
     $ docker ps
     ----------------------------------------------------------------------
@@ -113,6 +131,10 @@ Located in the working directory
     390a083319ca        kartoza/postgis:11.5-2.8   "/bin/sh -c /scripts…"   4 minutes ago       Up 4 minutes        0.0.0.0:55432->5432/tcp                       application-db
     1646a810ea45        app                        "docker-php-entrypoi…"   4 minutes ago       Up 4 minutes        9000/tcp                                      application
     c7cd0a8ad504        nginx:alpine               "/docker-entrypoint.…"   4 minutes ago       Up 4 minutes        0.0.0.0:8000->80/tcp, 0.0.0.0:4443->443/tcp   application-webserver
+
+#### 4. Install external dependencies
+
+    $ docker-compose exec app composer install
 
 #### 5. DB migrations
     
@@ -125,31 +147,96 @@ Located in the working directory
     Migrated:  2020_08_27_235534_import_pharmacies (1.05 seconds)
 
 
+---
 ### B) Local Environment
 
+The entry point of the application is **public/index.php**.
+Route requests from the webserver / virtual host to this resource.
 
-DB migrations
-    
+#### 1. Install external dependencies
+
+    $ composer install
+
+#### 2. DB settings
+Setting up database a user and related permissions according to .env keys
+- DB_HOST
+- DB_PORT
+- DB_DATABASE
+- DB_USERNAME
+- DB_PASSWORD
+
+#### 3. DB migrations
+
     $ php artisan migrate
 
+## USAGE
+The web application exposes the route "/" via POST method and receives calls according to the JSON-RPC 2.0 standard.
+The only accepted method is **SearchNearestPharmacy**, whose parameters are so structured:
+
+- **currentLocation**, the location of the user, composed of:
+  - **latitude** required|float
+  - **longitude** required|float
+- **range** required|min:0
+- **limit** required|min:-1 (-1 = no limit)
+
+#### Example
+    REQUEST
+    --------------------------------------------------------------------------------
+    curl --header "Content-Type: application/json" \
+      --request POST \
+      --data '{"jsonrpc":"2.0","id":"1","method":"SearchNearestPharmacy","params":{"currentLocation":{"latitude":"41.10938993","longitude":"15.0321010"},"range":"5000","limit":"2"}}' \
+      http[s]://<host>:<port>/
+
+    RESPONSE
+    --------------------------------------------------------------------------------
+    {"id":"1","jsonrpc":"2.0","result":{"pharmacies":[{"name":"Belmonte Di Dott.sse Belmonte S. Ed E. Snc","latitude":"41.11","longitude":"15.03","distance":"39.99961698"}]}}
+
+Using Docker, the web server is externally exposed by default on port 8000:
+    
+    http://localhost:8000/
+    
+However, it is possible to change this setting by setting the key APP_BIND_PORT_HTTP (.env file).
+
+You can also change the ports exposed on the https and postgres service respectively (.env file):
+- APP_BIND_PORT_HTTPS
+- APP_BIND_PORT_DB
 
 
+## TEST
+The automated tests, made using PHPUnit, consist of 10 tests and 28 assertions and represent all possible use cases (including cases of failure) of the application.
 
-## TESTS
+| Name             | Description                    | Status |
+|------------------|--------------------------------|--------|
+| Parse error      | Invalid json parsing           | PASSED |
+| Invalid request  | Json validation failed         | PASSED |
+| Method not found | Wrong method name              | PASSED |
+| Invalid params   | Missed required keys in params | PASSED |
+| Invalid params   | Negative range                 | PASSED |
+| Invalid params   | Negative limit (< -1)          | PASSED |
+| Success 1        |                                | PASSED |
+| Success 2        |                                | PASSED |
+| Success 3        |                                | PASSED |
+
+These tests are summarized in the _logtests_ file.
+
+Start tests with Docker (A)
 
     $ docker-compose exec app ./vendor/bin/phpunit
+    PHPUnit 8.5.8 by Sebastian Bergmann and contributors.
+    
+    ..........                                                        10 / 10 (100%)
+    
+    Time: 274 ms, Memory: 10.00 MB
+    
+    OK (10 tests, 28 assertions)
 
+With local environment (B)
 
-
-Stop all services
-
-    $ docker stop application application-webserver application-db
-
-    $ docker stop application
-
-    $ docker stop application-webserver
-
-    $ docker stop application-db
-
-
-$ docker-compose exec db bash
+    $ ./vendor/bin/phpunit
+    PHPUnit 8.5.8 by Sebastian Bergmann and contributors.
+    
+    ..........                                                        10 / 10 (100%)
+    
+    Time: 274 ms, Memory: 10.00 MB
+    
+    OK (10 tests, 28 assertions)
